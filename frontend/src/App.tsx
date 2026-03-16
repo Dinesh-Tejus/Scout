@@ -24,7 +24,7 @@ export default function App() {
     onAudioChunk,
     onInterrupt,
   });
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [, setIsDrawerOpen] = useState(false);
   const [topHeight, setTopHeight] = useState(30); // percent
   const [leftWidth, setLeftWidth] = useState(50); // percent
   const [hDragging, setHDragging] = useState(false);
