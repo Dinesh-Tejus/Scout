@@ -33,7 +33,6 @@ _GEMINI_CONFIG = {
     "output_audio_transcription": {},
     "system_instruction": SCOUT_SYSTEM_PROMPT,
     "tools": [{"function_declarations": TOOL_DECLARATIONS}],
-    "automatic_function_calling": types.AutomaticFunctionCallingConfig(maximum_remote_calls=32),
     "speech_config": types.SpeechConfig(
         voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")
