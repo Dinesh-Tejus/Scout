@@ -166,8 +166,9 @@ class ScoutSession:
             except Exception as exc:
                 logger.warning("response_receiver error: %s", exc)
                 self._running = False
+                logger.info("response_receiver: fatal error, exiting loop")
                 await self.ws_emit(ErrorEvent(message="Connection to AI service lost. Please refresh to reconnect.").model_dump())
-                break
+                return
 
     async def _handle_tool_calls(self, live_session, tool_call) -> None:
         """
