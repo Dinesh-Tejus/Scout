@@ -113,6 +113,13 @@ class InterruptEvent(BaseModel):
     type: str = "interrupt"
 
 
+class CacheHitEvent(BaseModel):
+    type: str = "cache_hit"
+    query: str
+    competitor_count: int
+    cached_at: str  # ISO timestamp
+
+
 class ErrorEvent(BaseModel):
     type: str = "error"
     message: str

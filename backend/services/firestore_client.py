@@ -1,8 +1,13 @@
+import hashlib
 import os
 from datetime import datetime, timezone
 from google.cloud import firestore
 
 from models import CompetitorCard, MarketPatterns
+
+
+def _query_hash(query: str) -> str:
+    return hashlib.md5(query.strip().lower().encode()).hexdigest()
 
 
 def _get_db() -> firestore.AsyncClient:
@@ -55,6 +60,25 @@ async def save_synthesis(
         },
         merge=True,
     )
+
+
+async def get_cached_search(query: str) -> list[dict] | None:
+    """Return cached competitor list for exact query, or None."""
+    db = _get_db()
+    doc = await db.collection("search_cache").document(_query_hash(query)).get()
+    if doc.exists:
+        return doc.to_dict().get("competitors")
+    return None
+
+
+async def cache_search(query: str, competitors: list[dict], cached_at: str) -> None:
+    """Store competitor list for exact query."""
+    db = _get_db()
+    await db.collection("search_cache").document(_query_hash(query)).set({
+        "query": query.strip().lower(),
+        "competitors": competitors,
+        "cached_at": cached_at,
+    })
 
 
 async def init_session(session_id: str) -> None:

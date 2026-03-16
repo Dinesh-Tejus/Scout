@@ -1,7 +1,4 @@
-# GCP SDK (installed locally, not part of project)
-GCP/
-install.sh
-
+ 
 # Python
 __pycache__/
 *.pyc

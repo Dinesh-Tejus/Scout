@@ -204,4 +204,16 @@ class ScoutSession:
 
     async def push_text(self, text: str) -> None:
         """Called from the WebSocket handler to enqueue a text command."""
+        if not self.session_state.get("competitors"):
+            await self.inject_queue.put(
+                "[SYSTEM REMINDER: No search has been done yet. "
+                "Your ONLY valid next action is to call search_competitors. "
+                "Respond with engaging audio until after the tool returns.]"
+            )
+        else:
+            await self.inject_queue.put(
+                "[SYSTEM REMINDER: The user is providing updated or additional search details. "
+                "Your ONLY valid next action is to call search_competitors again with their refined query. "
+                "Combine the new details with any prior context to form the best query possible.]"
+            )
         await self.text_queue.put(text)

@@ -91,7 +91,7 @@ body { height: 100vh; overflow: hidden; display: block; }
 
 .images-panel .competitor-card,
 .skeleton-card {
-  height: 280px;
+  height: 360px;
   width: 200px;
   min-width: 200px;
   max-width: 200px;
@@ -101,7 +101,7 @@ body { height: 100vh; overflow: hidden; display: block; }
 
 .images-panel .competitor-card .card-body {
   overflow: hidden;
-  height: calc(280px - 140px);
+  height: calc(360px - 160px);
 }
 
 .bottom-panel {

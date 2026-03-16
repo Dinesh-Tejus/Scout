@@ -6,14 +6,14 @@ from models import CompetitorCard, CompetitorImage
 
 
 async def search_competitors(query: str, max_results: int = 5) -> list[CompetitorCard]:
-    """Search for competitors using Tavily and return CompetitorCard objects with image URLs."""
+    """Search for market/brand competitors using search agents like Tavily and return CompetitorCard objects with image URLs."""
     client = AsyncTavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
     response = await client.search(
         query=query,
         max_results=max_results,
         include_images=True,
-        search_depth="basic",
+        search_depth="advanced",
     )
 
     competitors: list[CompetitorCard] = []

@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { WSEvent, WSOutgoing, CompetitorCard, MarketPatterns, VisualAnalysis, ActivityEntry, CompetitorImage } from "../types";
 
+function formatRelativeTime(isoTimestamp: string): string {
+  const diff = Date.now() - new Date(isoTimestamp).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 export interface ResearchState {
   competitors: Record<string, CompetitorCard>;
   patterns: MarketPatterns | null;
@@ -224,6 +234,16 @@ export function useWebSocket(sessionId: string) {
             addActivity({ ...s, is_complete: true, active_tool: null }, {
               category: "info",
               label: "Research complete",
+            }),
+          );
+          break;
+
+        case "cache_hit":
+          setResearch((s) =>
+            addActivity(s, {
+              category: "cache",
+              label: `Cached results for "${event.query}"`,
+              detail: `${event.competitor_count} competitors · saved ${formatRelativeTime(event.cached_at)}`,
             }),
           );
           break;

@@ -17,7 +17,10 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+from datetime import datetime, timezone
+
 from models import (
+    CacheHitEvent,
     CompetitorCard,
     CompetitorFoundEvent,
     CompetitorImagesEvent,
@@ -53,9 +56,38 @@ async def handle_search_competitors(
 
     await ws_emit(ToolStartEvent(tool="search_competitors", query=query).model_dump())
 
-    competitors = await tavily.search_competitors(query, max_results)
+    # ── Cache check ───────────────────────────────────────────────────────────
+    competitors: list[CompetitorCard] = []
+    cache_hit = False
+    cached_at_str: str | None = None
 
-    # Emit each competitor and store in session state
+    try:
+        from services import firestore_client
+        cached = await firestore_client.get_cached_search(query)
+        if cached is not None:
+            competitors = [CompetitorCard(**c) for c in cached]
+            cache_hit = True
+            # Retrieve cached_at from one of the stored docs (stored at cache level)
+            # We'll read it properly below; for now use a fallback
+            cached_at_str = datetime.now(timezone.utc).isoformat()
+            try:
+                import hashlib
+                from google.cloud import firestore as _fs
+                db = firestore_client._get_db()
+                doc = await db.collection("search_cache").document(
+                    hashlib.md5(query.strip().lower().encode()).hexdigest()
+                ).get()
+                if doc.exists:
+                    cached_at_str = doc.to_dict().get("cached_at", cached_at_str)
+            except Exception:
+                pass
+    except Exception as e:
+        logger.debug("Cache lookup skipped: %s", e)
+
+    if not cache_hit:
+        competitors = await tavily.search_competitors(query, max_results)
+
+    # ── Emit competitors ──────────────────────────────────────────────────────
     for competitor in competitors:
         await ws_emit(CompetitorFoundEvent(competitor=competitor).model_dump())
         session_state.setdefault("competitors", {})[competitor.id] = competitor
@@ -63,6 +95,25 @@ async def handle_search_competitors(
     await ws_emit(SearchResultEvent(
         query=query, found=len(competitors), names=[c.name for c in competitors]
     ).model_dump())
+
+    if cache_hit and cached_at_str:
+        await ws_emit(CacheHitEvent(
+            query=query,
+            competitor_count=len(competitors),
+            cached_at=cached_at_str,
+        ).model_dump())
+    elif not cache_hit:
+        # Persist to cache after a fresh Tavily search
+        try:
+            from services import firestore_client
+            now = datetime.now(timezone.utc).isoformat()
+            await firestore_client.cache_search(
+                query,
+                [c.model_dump() for c in competitors],
+                now,
+            )
+        except Exception as e:
+            logger.debug("Cache write skipped: %s", e)
 
     # Fire deep research for all competitors in the background — don't await
     asyncio.create_task(
@@ -94,6 +145,7 @@ async def handle_search_competitors(
             for c in competitors
         ],
         "deep_research_started": True,
+        "cache_hit": cache_hit,
     }
 
 

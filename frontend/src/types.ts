@@ -47,7 +47,8 @@ export type WSEvent =
   | { type: "search_result"; query: string; found: number; names: string[] }
   | { type: "vision_start"; competitor_name: string; image_url: string }
   | { type: "extract_result"; url: string; success: boolean; excerpt_count: number }
-  | { type: "competitor_images"; competitor_id: string; images: CompetitorImage[] };
+  | { type: "competitor_images"; competitor_id: string; images: CompetitorImage[] }
+  | { type: "cache_hit"; query: string; competitor_count: number; cached_at: string };
 
 // WebSocket messages — Browser → Backend
 export type WSOutgoing =
@@ -58,7 +59,7 @@ export type WSOutgoing =
 export interface ActivityEntry {
   id: string;
   timestamp: number;
-  category: "thinking" | "search" | "result" | "vision" | "extract" | "tool" | "info" | "error";
+  category: "thinking" | "search" | "result" | "vision" | "extract" | "tool" | "info" | "error" | "cache";
   label: string;
   detail?: string;
   rawData?: unknown;

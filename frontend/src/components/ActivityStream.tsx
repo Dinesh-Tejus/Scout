@@ -10,6 +10,7 @@ const CATEGORY_ICONS: Record<ActivityEntry["category"], string> = {
   tool: "⚙️",
   info: "✓",
   error: "✗",
+  cache: "💾",
 };
 
 function formatTime(ts: number): string {
