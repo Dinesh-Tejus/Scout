@@ -51,6 +51,7 @@ async def handle_search_competitors(
     Tavily text search → emit competitor_found events → fire background deep research.
     Returns summary of discovered competitors for Gemini to narrate immediately.
     """
+    session_state["search_count"] = session_state.get("search_count", 0) + 1
     query = args.get("query", "")
     max_results = int(args.get("max_results", 5))
 

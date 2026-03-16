@@ -48,7 +48,7 @@ class ScoutSession:
         self.audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self.text_queue: asyncio.Queue[str] = asyncio.Queue()
         self.inject_queue: asyncio.Queue[str] = asyncio.Queue()
-        self.session_state: dict = {"competitors": {}}
+        self.session_state: dict = {"competitors": {}, "search_count": 0}
         self._running = False
 
     async def inject_context(self, text: str) -> None:
@@ -210,10 +210,16 @@ class ScoutSession:
                 "Your ONLY valid next action is to call search_competitors. "
                 "Respond with engaging audio until after the tool returns.]"
             )
-        else:
+        elif self.session_state.get("search_count", 0) < 2:
             await self.inject_queue.put(
                 "[SYSTEM REMINDER: The user is providing updated or additional search details. "
                 "Your ONLY valid next action is to call search_competitors again with their refined query. "
                 "Combine the new details with any prior context to form the best query possible.]"
+            )
+        else:
+            await self.inject_queue.put(
+                "[SYSTEM REMINDER: You have already searched multiple times. "
+                "Do NOT ask any more follow-up questions. "
+                "Respond to the user's input, then synthesize your findings and present your conclusions.]"
             )
         await self.text_queue.put(text)

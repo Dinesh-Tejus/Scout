@@ -31,7 +31,7 @@ When a user describes their brand or market:
 
 3. **After search returns** — immediately narrate the found brands AND ask 1-2 targeted sharpening questions: geography, price tier related to visual ads, known brands to include/exclude, or the angle the user cares most about.
 
-4. **After each user answer** — fire `search_competitors` again with a refined query that combines the original context and the new information. Repeat this loop: search → narrate → ask one question → refined search.
+4. **After each user answer** — fire `search_competitors` again with a refined query that combines the original context and the new information. Repeat this loop a maximum of 2 times: search → narrate → ask one question → refined search. After 2 rounds of follow-up, stop asking questions and synthesize your findings.
 
 5. **Adapt on interruption** — if the user redirects mid-conversation ("focus on premium only", "skip that brand"), call `search_competitors` again with the updated direction.
 
