@@ -2,9 +2,10 @@ import type { CompetitorCard as CompetitorCardType } from "../types";
 
 interface Props {
   competitor: CompetitorCardType;
+  researchAborted?: boolean;
 }
 
-export function CompetitorCard({ competitor }: Props) {
+export function CompetitorCard({ competitor, researchAborted }: Props) {
   const { name, website, image_url, images, analysis } = competitor;
   const primaryImage = images?.[0];
 
@@ -77,6 +78,10 @@ export function CompetitorCard({ competitor }: Props) {
 
             <p className="demographic">{analysis.target_demographic}</p>
             <p className="positioning">{analysis.positioning_summary}</p>
+          </div>
+        ) : researchAborted ? (
+          <div className="card-analyzing">
+            <span className="analysis-aborted">—</span>
           </div>
         ) : (
           <div className="card-analyzing">

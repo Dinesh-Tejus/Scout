@@ -48,12 +48,13 @@ export type WSEvent =
   | { type: "vision_start"; competitor_name: string; image_url: string }
   | { type: "extract_result"; url: string; success: boolean; excerpt_count: number }
   | { type: "competitor_images"; competitor_id: string; images: CompetitorImage[] }
-  | { type: "cache_hit"; query: string; competitor_count: number; cached_at: string };
+  | { type: "cache_hit"; query: string; competitor_count: number; cached_at: string }
+  | { type: "research_aborted" };
 
 // WebSocket messages — Browser → Backend
 export type WSOutgoing =
   | { type: "audio"; data: string }
-  | { type: "control"; action: "start" | "stop" | "interrupt" }
+  | { type: "control"; action: "start" | "stop" | "interrupt" | "abort_research" }
   | { type: "text_input"; text: string };
 
 export interface ActivityEntry {

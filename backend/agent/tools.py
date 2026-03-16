@@ -117,9 +117,10 @@ async def handle_search_competitors(
             logger.debug("Cache write skipped: %s", e)
 
     # Fire deep research for all competitors in the background — don't await
-    asyncio.create_task(
+    task = asyncio.create_task(
         _deep_research_all(competitors, ws_emit, session_state, session_id, push_inject)
     )
+    session_state.setdefault("_research_tasks", []).append(task)
 
     # Inject a narration cue so Gemini always introduces the primary results.
     # Small delay ensures the tool response reaches Gemini first, then this cue
@@ -158,8 +159,9 @@ async def _deep_research_all(
     push_inject=None,
 ) -> None:
     """Run deep research on all competitors in parallel, then auto-synthesize."""
+    vision_sem = asyncio.Semaphore(2)  # at most 2 concurrent vision calls
     tasks = [
-        _deep_research_competitor(c, ws_emit, session_state)
+        _deep_research_competitor(c, ws_emit, session_state, vision_sem)
         for c in competitors
     ]
     await asyncio.gather(*tasks, return_exceptions=True)
@@ -182,6 +184,7 @@ async def _deep_research_competitor(
     competitor: CompetitorCard,
     ws_emit: WsEmit,
     session_state: dict,
+    vision_sem: asyncio.Semaphore,
 ) -> None:
     """Run image search + text extraction in parallel for a single competitor, then vision-analyze."""
     images_result, extract_result = await asyncio.gather(
@@ -204,7 +207,8 @@ async def _deep_research_competitor(
             await ws_emit(VisionStartEvent(
                 competitor_name=competitor.name, image_url=img.image_url
             ).model_dump())
-            analysis = await vision.analyze_brand_image(img.image_url, competitor.name)
+            async with vision_sem:
+                analysis = await vision.analyze_brand_image(img.image_url, competitor.name)
             if analysis:
                 session_state["competitors"][competitor.id].analysis = analysis
                 await ws_emit(
@@ -218,7 +222,8 @@ async def _deep_research_competitor(
         await ws_emit(VisionStartEvent(
             competitor_name=competitor.name, image_url=competitor.image_url
         ).model_dump())
-        analysis = await vision.analyze_brand_image(competitor.image_url, competitor.name)
+        async with vision_sem:
+            analysis = await vision.analyze_brand_image(competitor.image_url, competitor.name)
         if analysis:
             session_state["competitors"][competitor.id].analysis = analysis
             await ws_emit(

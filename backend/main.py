@@ -91,6 +91,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             session.audio_queue.get_nowait()
                         except Exception:
                             break
+                elif action == "abort_research":
+                    await session.abort_research()
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected: session=%s", session_id)

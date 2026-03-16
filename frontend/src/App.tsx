@@ -92,6 +92,7 @@ export default function App() {
             onMute={toggleMute}
             analyserNode={analyserNode}
             onTextSubmit={(text) => send({ type: "text_input", text })}
+            onAbortResearch={() => send({ type: "control", action: "abort_research" })}
           />
         </aside>
 
@@ -100,6 +101,7 @@ export default function App() {
             <ResearchFeed
               competitors={research.competitors}
               activeTool={research.active_tool}
+              researchAborted={research.research_aborted}
             />
           </section>
           <div

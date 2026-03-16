@@ -1,9 +1,12 @@
+import logging
 import os
 import httpx
 from google import genai
 from google.genai import types
 
 from models import VisualAnalysis
+
+logger = logging.getLogger(__name__)
 
 _VISION_MODEL = "gemini-2.5-flash"
 _MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
@@ -81,5 +84,8 @@ async def analyze_brand_image(image_url: str, competitor_name: str) -> VisualAna
 
         return VisualAnalysis.model_validate_json(raw)
 
-    except Exception:
+    except Exception as exc:
+        exc_str = str(exc).lower()
+        if "429" in exc_str or "resource exhausted" in exc_str or "quota" in exc_str:
+            logger.warning("Vision API rate limited for %s, skipping", competitor_name)
         return None

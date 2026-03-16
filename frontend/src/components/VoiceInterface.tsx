@@ -11,6 +11,7 @@ interface Props {
   onMute: () => void;
   analyserNode: AnalyserNode | null;
   onTextSubmit: (text: string) => void;
+  onAbortResearch: () => void;
 }
 
 export function VoiceInterface({
@@ -24,6 +25,7 @@ export function VoiceInterface({
   onMute,
   analyserNode,
   onTextSubmit,
+  onAbortResearch,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -123,6 +125,15 @@ export function VoiceInterface({
             aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
           >
             {isMuted ? "🔇 Unmute" : "🔈 Mute"}
+          </button>
+        )}
+        {connected && (
+          <button
+            className="abort-btn"
+            onClick={onAbortResearch}
+            aria-label="Abort research"
+          >
+            ✕ Abort Research
           </button>
         )}
       </div>

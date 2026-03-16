@@ -4,9 +4,10 @@ import { CompetitorCard } from "./CompetitorCard";
 interface Props {
   competitors: Record<string, CompetitorCardType>;
   activeTool: string | null;
+  researchAborted?: boolean;
 }
 
-export function ResearchFeed({ competitors, activeTool }: Props) {
+export function ResearchFeed({ competitors, activeTool, researchAborted }: Props) {
   const cards = Object.values(competitors);
   const isEmpty = cards.length === 0;
 
@@ -29,7 +30,7 @@ export function ResearchFeed({ competitors, activeTool }: Props) {
             <p className="feed-empty-sub">Results appear as Scout searches</p>
           </div>
         ) : (
-          cards.map((c) => <CompetitorCard key={c.id} competitor={c} />)
+          cards.map((c) => <CompetitorCard key={c.id} competitor={c} researchAborted={researchAborted} />)
         )}
       </div>
     </div>

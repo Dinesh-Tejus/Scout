@@ -20,6 +20,7 @@ export interface ResearchState {
   transcripts: Array<{ text: string; role: "user" | "agent" }>;
   error: string | null;
   activityLog: ActivityEntry[];
+  research_aborted: boolean;
 }
 
 const INITIAL_STATE: ResearchState = {
@@ -31,6 +32,7 @@ const INITIAL_STATE: ResearchState = {
   transcripts: [],
   error: null,
   activityLog: [],
+  research_aborted: false,
 };
 
 export function useWebSocket(sessionId: string) {
@@ -103,7 +105,7 @@ export function useWebSocket(sessionId: string) {
 
         case "tool_start":
           setResearch((s) =>
-            addActivity({ ...s, active_tool: event.tool }, {
+            addActivity({ ...s, active_tool: event.tool, research_aborted: false }, {
               category: "tool",
               label: `Tool: ${event.tool}`,
               detail: event.query || undefined,
@@ -255,6 +257,10 @@ export function useWebSocket(sessionId: string) {
               label: `Error: ${event.message}`,
             }),
           );
+          break;
+
+        case "research_aborted":
+          setResearch((s) => ({ ...s, active_tool: null, research_aborted: true }));
           break;
       }
     };

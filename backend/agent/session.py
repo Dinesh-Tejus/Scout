@@ -48,7 +48,7 @@ class ScoutSession:
         self.audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self.text_queue: asyncio.Queue[str] = asyncio.Queue()
         self.inject_queue: asyncio.Queue[str] = asyncio.Queue()
-        self.session_state: dict = {"competitors": {}, "search_count": 0}
+        self.session_state: dict = {"competitors": {}, "search_count": 0, "_research_tasks": []}
         self._running = False
 
     async def inject_context(self, text: str) -> None:
@@ -165,8 +165,9 @@ class ScoutSession:
                 raise
             except Exception as exc:
                 logger.warning("response_receiver error: %s", exc)
-                if not self._running:
-                    break
+                self._running = False
+                await self.ws_emit(ErrorEvent(message="Connection to AI service lost. Please refresh to reconnect.").model_dump())
+                break
 
     async def _handle_tool_calls(self, live_session, tool_call) -> None:
         """
@@ -194,6 +195,19 @@ class ScoutSession:
             )
 
         await live_session.send_tool_response(function_responses=function_responses)
+
+    async def abort_research(self) -> None:
+        """Cancel all in-flight deep research tasks and notify the agent."""
+        tasks = self.session_state.get("_research_tasks", [])
+        for task in tasks:
+            task.cancel()
+        self.session_state["_research_tasks"] = []
+        await self.ws_emit({"type": "research_aborted"})
+        await self.inject_queue.put(
+            "[SYSTEM REMINDER: The user has aborted the background research. "
+            "Acknowledge this naturally — let them know what was found so far is preserved "
+            "and they can start a new search whenever they're ready.]"
+        )
 
     def stop(self) -> None:
         self._running = False
